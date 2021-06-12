@@ -1,0 +1,10 @@
+exec: c-libs
+	gcc -g -m32 -o task0a task0a.o
+	rm -f task0a.o 
+	
+c-libs: task0a.c
+	gcc -g -m32 -c -o task0a.o task0a.c
+	
+.PHONY: clean
+clean:
+	rm -rf ./*.o task0a
